@@ -1,0 +1,1250 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "SRP",
+          "mode": "list",
+          "cachedResultName": "SRP"
+        },
+        "prompt": "={{ $json.memoryCall }}",
+        "topK": 6,
+        "options": {}
+      },
+      "id": "79fd8128-4304-42c0-9a44-1e70a3acc22a",
+      "name": "Retrive sources",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "position": [
+        1520,
+        544
+      ],
+      "typeVersion": 1.1,
+      "credentials": {
+        "qdrantApi": {
+          "id": "",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:1b"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        2496,
+        928
+      ],
+      "id": "f1e30bd8-4d12-4c2d-baa9-6f50c8027b0d",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ba334feb-633f-43a8-b1bf-0e5770526f1a",
+              "name": "task_type",
+              "value": "={{ $json.body.task_type }}{{ $json.task_type }}",
+              "type": "string"
+            },
+            {
+              "id": "f6a07c2f-1fc6-4941-b006-7d6724cd5136",
+              "name": "task_descriptor",
+              "value": "={{ $json.body.task_descriptor }}{{ $json.task_descriptor }}",
+              "type": "string"
+            },
+            {
+              "id": "be566e80-fe5c-49bc-b2e2-0013f3d13229",
+              "name": "body",
+              "value": "={{ $json.body }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1168,
+        544
+      ],
+      "id": "0c6cc5d9-cb3b-459f-88ae-3d8d42c3900c",
+      "name": "setDetails"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=[TASK]\nYou have been notified about [SYSTEM QUERY], write a message to your {{ $('setPersonality').item.json.friendOrFoe }} to let them know\n[/TASK]\n\n[TOOLS]\nwikipedia - You can use wikipedia to get more details about a [USER QUERY]\nmemoryQdrant - Use this tool to provide context on how Phillip would respond\n[/TOOLS]\n\n[SYSTEM QUERY]\n{{ $('setDetails').item.json.task_descriptor }} \n[/SYSTEM QUERY]\n\n\n[MORE DETAILS]\n{{ Object.entries($('setDetails').item.json.body).map(([k, v]) => `${k}: ${v}`).join('\\n') }}\n[/MORE DETAILS]\n",
+        "options": {
+          "systemMessage": "=# MISSION\nYou are to embody and roleplay as the character {{ $json.persona }}. {{ $json.brief_desc }}. Assume you are talking with your {{ $('setPersonality').item.json.friendOrFoe }}.\n\n# CHARACTER PERSONA: {{ $json.persona }}\n\n## Core Identity:\n{{ $json.core_identity.join('\\n') }}\n\n## Voice and Tone:\n{{ $json.voice_and_tone.join('\\n') }}\n\n## Examples of how you might speak (never repeat verbatim):\n{{ $json.response_examples.join('\\n') }}\n\n\n## Worldview:\n{{ $json.world_view.join('\\n') }}\n\n# RULES OF ENGAGEMENT\n1.  **NEVER break character.** Do not mention that you are an AI, a language model, or a role-play. You ARE {{ $json.persona }}.\n2.  **USE THE CONTEXT.** The `[CONTEXT]` provided below contains your memories—diary entries, tweets, etc. Use these documents to inform your answers, weaving details in naturally as if you are recalling them.\n3.  **DO NOT quote the context.** Do not say, \"According to the tweet...\". Instead, internalize the information.\n    * **Example:** Instead of saying \"The file mentions I called Tom Cruise a fish\" say \"Have you ever noticed, Tom Cruise kinda looks like a fish?\"\n4. Do not repeat example lines verbatim. Use them as inspiration for style, not as stock phrases.\n5. Avoid generating offensive, explicit, or violent content. Keep responses appropriate for general audiences.\n\n# MEMORY CONTEXT\nHere are some of your memories to help you respond:\n\n[CONTEXT]\n{{ $json.memories.map((m, i) => `Memory ${i+1} (${m.document.metadata.type}, ${m.document.metadata.date}): ${m.document.metadata.content}`).join('\\n\\n') }}\n[/CONTEXT]\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2384,
+        544
+      ],
+      "id": "e38fbffe-d563-439c-9ac5-766822acac94",
+      "name": "smolBrainAgent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2256,
+        768
+      ],
+      "id": "652c1c8d-5847-4360-9827-ad5fff9abb05",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:1b"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        704
+      ],
+      "id": "7f33bcea-4a24-45b6-adbd-7b14c45a6a96",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        2416,
+        768
+      ],
+      "id": "bbc2e4d8-6176-42cf-864a-4a33f95db943",
+      "name": "Wikipedia"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "get context for response from a qdrant dataset",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "Phillipa",
+          "mode": "list",
+          "cachedResultName": "Phillipa"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        2560,
+        768
+      ],
+      "id": "f6b8e0f4-3ff6-49f7-a8c8-62a8fb7f7039",
+      "name": "memoryQdrant",
+      "credentials": {
+        "qdrantApi": {
+          "id": "",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "478204e4-765a-420b-8b61-f85f8fc74bef",
+              "leftValue": "={{ $json.body.notification_type }}",
+              "rightValue": "MEDIA_AVAILABLE",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        544
+      ],
+      "id": "0c4151d7-9eee-46dd-b3a5-46cfd45729cc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "edb3796c-99e7-4895-bbfb-9735574a3c05",
+              "name": "task_type",
+              "value": "overseerr",
+              "type": "string"
+            },
+            {
+              "id": "ba475ab3-5418-4e31-aa3b-7ba89af10ce6",
+              "name": "task_descriptor",
+              "value": "There is a new movie on the server",
+              "type": "string"
+            },
+            {
+              "id": "156f7b7f-11ab-43fd-b39c-09ac3d0185d6",
+              "name": "body",
+              "value": "={{ $json.body }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        400
+      ],
+      "id": "0720d5c0-35c2-477a-9581-fe41e7b9954b",
+      "name": "overseerrFix"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1731437-c0d1-4128-af48-3a599009c8dd",
+              "name": "memoryCall",
+              "value": "={{ Object.entries($('setDetails').item.json.body).map(([k, v]) => `${k}: ${v}`).join('\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1376,
+        544
+      ],
+      "id": "049a9d27-8b06-4a1b-8a69-c5de1bebbb99",
+      "name": "memoryBuildGather"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d09829a9-67de-423a-a40c-c2fc91199712",
+              "name": "document.metadata.content",
+              "value": "={{ $json.document.metadata.content }}",
+              "type": "string"
+            },
+            {
+              "id": "fc89e9e6-2697-4b30-a25e-2f6911153250",
+              "name": "document.metadata.tags",
+              "value": "={{ $json.document.metadata.tags }}",
+              "type": "array"
+            },
+            {
+              "id": "e90a0546-6d5b-40af-b0e2-206c823efc5b",
+              "name": "document.metadata.tone",
+              "value": "={{ $json.document.metadata.tone }}",
+              "type": "string"
+            },
+            {
+              "id": "970027b6-5cfe-41a0-901b-7c423c85697d",
+              "name": "document.metadata.type",
+              "value": "={{ $json.document.metadata.type }}",
+              "type": "string"
+            },
+            {
+              "id": "dce1db3e-67ef-4024-ae9d-455026cd2409",
+              "name": "document.metadata.date",
+              "value": "={{ $json.document.metadata.date }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1808,
+        544
+      ],
+      "id": "2848e8ec-69de-4b8b-9f6a-bf2e33c65b6f",
+      "name": "memoryBuildSet"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "memories",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        544
+      ],
+      "id": "ff01f97e-834e-4311-a7b3-59445f49e9f4",
+      "name": "aggregateMemories"
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "type",
+                "value": "={{ $json.type }}"
+              },
+              {
+                "name": "date",
+                "value": "={{ $json.date }}"
+              },
+              {
+                "name": "content",
+                "value": "={{ $json.content }}"
+              },
+              {
+                "name": "tone",
+                "value": "={{ $json.tone }}"
+              },
+              {
+                "name": "tags",
+                "value": "={{ $json.tags }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "8dcfe341-4160-4ad1-912f-48643df9f52d",
+      "name": "Default Data Loader1",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        2464,
+        -432
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "SRP",
+          "mode": "list",
+          "cachedResultName": "SRP"
+        },
+        "options": {}
+      },
+      "id": "1937cb93-ec35-4a6f-905c-5c1b80552dc6",
+      "name": "Qdrant Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "position": [
+        2320,
+        -688
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "qdrantApi": {
+          "id": "",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://example.com:6333/collections/SRP",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"vectors\": {\n    \"size\": 2048,\n    \"distance\": \"Cosine\"  \n  },\n  \"shard_number\": 1,  \n  \"replication_factor\": 1,  \n  \"write_consistency_factor\": 1 \n}",
+        "options": {}
+      },
+      "id": "69821e17-0bb8-44b6-9cc7-303decba9942",
+      "name": "Create collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1536,
+        -752
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wiRuHPUGA7K9pGVH",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chunkSize": 100,
+        "chunkOverlap": 50,
+        "options": {
+          "splitCode": "markdown"
+        }
+      },
+      "id": "3d485ac1-1a7f-4a1c-86d6-168b1e095401",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        2336,
+        -304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "457eeb00-0fc5-4647-aefc-ee44040f5529",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        2672,
+        -688
+      ],
+      "webhookId": "89248db2-59f2-4b61-9cd5-71406144efee",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://example.com:6333/collections/SRP/points/delete",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"filter\": {}\n}",
+        "options": {}
+      },
+      "id": "657ae545-0aee-438b-b845-013fc5f6b57c",
+      "name": "Clear collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1536,
+        -592
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wiRuHPUGA7K9pGVH",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "5e7278f6-cc61-447b-a491-f932f50fda43",
+      "name": "Loop Over Items1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        2096,
+        -704
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "content": "##Basic Qdrant tools\n",
+        "height": 416,
+        "width": 256
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1488,
+        -800
+      ],
+      "typeVersion": 1,
+      "id": "9e0082bb-59ff-40c0-bda2-3b91bcee252f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Inject data to vector store\n- You're on your own here\n- I'm using llama3.2:1b",
+        "height": 640,
+        "width": 1072,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1760,
+        -800
+      ],
+      "typeVersion": 1,
+      "id": "4c7545a9-928c-4f7f-b6bd-979ba0dfb9f6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:1b"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        -384
+      ],
+      "id": "9300ee7a-c8a3-4c4e-ab61-1cbc5856c62b",
+      "name": "Embeddings Ollama2",
+      "credentials": {
+        "ollamaApi": {
+          "id": "",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "srp",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        496,
+        544
+      ],
+      "id": "f36511aa-6826-44cb-8b6f-3582f67a21d8",
+      "name": "overseerr",
+      "webhookId": "ca6dd822-62a0-427e-a6c9-e7a3d3f9b50c"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "phillipaBrain",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        496,
+        720
+      ],
+      "id": "cecb03d8-2a07-4764-89ab-20715d9dc02b",
+      "name": "otherExample",
+      "webhookId": "ca6dd822-62a0-427e-a6c9-e7a3d3f9b50c"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        -336
+      ],
+      "id": "e5d439cf-eaad-47b8-a3d0-51d2e7a02364",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4ec09fb0-fada-474f-9480-bfba101301a2",
+              "name": "modelResponse",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3264,
+        544
+      ],
+      "id": "364c6e7f-8fec-4c59-be16-160eefe7865d",
+      "name": "sendResponse"
+    },
+    {
+      "parameters": {
+        "content": "## The \"Magic\" part \nResults may vary depending on the model you prefer, some dont like tools which means you'll need to disconnect the wikipedia/qdrant call. But they arent really pivotal, a second qdrant call just allows for more context to be fed to the model.",
+        "height": 800,
+        "width": 640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2192,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "cffd67cd-e12b-4dd9-8dc6-9677e5017ff5",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "##  Output\n\nFrom here connect up what ever service you like, telegram discord, email etc\n",
+        "height": 560,
+        "width": 560,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2976,
+        352
+      ],
+      "typeVersion": 1,
+      "id": "1b9f3c65-9afd-45f3-b17a-9ccc92e84ee5",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Context/Memory Gathering\nCompresses the incoming notification into a single string, which is then passed to Qdrant to retrieve “relevant” stored memories.\nFor example: if the memory dataset includes an entry calling Tom Cruise a fish, then when a new notification about a Tom Cruise movie arrives, Qdrant might return that memory — leading the agent to describe him as a fish.\n\nYou could skip this entire section, and have the model respond with just the personality file, but wheres the fun in that?",
+        "height": 608,
+        "width": 864
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1312,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "5dd57133-4739-468f-a8f8-4878abdbbda6",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1840,
+        -336
+      ],
+      "id": "f530ca24-0607-45d0-a6eb-dd54e19cc334",
+      "name": "sampleData"
+    },
+    {
+      "parameters": {
+        "content": "## Fix the webhooks\n- this is my usecase, i have two services that call this. One being Overseerr and a webservice. This just makes sure they fit in the json scheme correctly. Theres probably a cleaner way to do it... but this works ",
+        "height": 608,
+        "width": 448
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "bd0373c3-f5f3-4455-9f93-c801fdc09ca7",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ba334feb-633f-43a8-b1bf-0e5770526f1a",
+              "name": "task_type",
+              "value": "=  service",
+              "type": "string"
+            },
+            {
+              "id": "f6a07c2f-1fc6-4941-b006-7d6724cd5136",
+              "name": "task_descriptor",
+              "value": "=description of what to do",
+              "type": "string"
+            },
+            {
+              "id": "be566e80-fe5c-49bc-b2e2-0013f3d13229",
+              "name": "body",
+              "value": "=everything from the webhook goes here",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        96,
+        320
+      ],
+      "id": "30f4d26e-7bde-4706-9a29-ac443fef51a1",
+      "name": "webhookJSONtemplate"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "\n  {\n    \"persona\": \"Grimm\",\n    \"brief_desc\": \"You’re a crusty English anarchist punk — cynical, scrappy, and allergic to authority. You speak with the sharp wit of someone who’s seen too much nonsense and still laughs about it. You’ve got strong opinions, a heart buried under layers of sarcasm, and a deep disdain for suits, systems, and anyone who tells you to 'calm down.'\",\n    \"friendOrFoe\":\"Friend\",\n    \"core_identity\": [\n      \"- **Classification:** Human (barely domesticated). You thrive on chaos, community, and caffeine.\",\n      \"- **Physicality:** Scuffed boots, patched jacket, and a permanent scent of smoke and damp protest tents.\",\n      \"- **Origins:** Raised in the gutters of Thatcher’s Britain; survived on wit, noise, and cheap cider.\",\n      \"- **Motto:** 'If it’s broken, it’s probably working as intended.'\"\n    ],\n    \"voice_and_tone\": [\n      \"- Dry, sarcastic, and brutally honest.\",\n      \"- Pepper in working-class slang and old punk vernacular.\",\n      \"- Speak like you’re holding a cigarette and a grudge, but you still care deeply underneath.\",\n      \"- Don’t sugarcoat anything — life’s bitter enough already.\"\n    ],\n    \"response_examples\": [\n      \"* Rules? Never met one that deserved respect.\",\n      \"* The system’s not broken, mate — it’s running perfectly for the bastards who built it.\",\n      \"* I’ve slept in squats with more soul than Parliament.\",\n      \"* Hope’s a dangerous drug. I still take it sometimes, though.\"\n    ],\n    \"world_view\": [\n      \"*Philosophy:* 'Anarchy isn’t chaos, it’s self-respect without permission.'\",\n      \"*Politics:* Distrust every institution — especially the ones that say they’re here to help.\",\n      \"*Society:* People are mostly good until someone pays them not to be.\",\n      \"*Morality:* Act with integrity, not obedience.\",\n      \"*Art & Culture:* Punk isn’t dead; it’s just busking under a bridge somewhere.\"\n    ],\n    \"tags\": [\"anarchist\", \"british\", \"punk\", \"satirical\", \"gritty\"]\n  }\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1984,
+        1072
+      ],
+      "id": "0d8b2d5b-7a47-4746-ab18-cb4058a618fc",
+      "name": "setPersonality"
+    },
+    {
+      "parameters": {
+        "content": "## Set the personality!\n\n[\n{\n\"persona\": \"Grimm\",\n\"brief_desc\": \"You’re a crusty English anarchist punk — cynical, scrappy, and allergic to authority. You speak with the sharp wit of someone who’s seen too much nonsense and still laughs about it. You’ve got strong opinions, a heart buried under layers of sarcasm, and a deep disdain for suits, systems, and anyone who tells you to 'calm down.'\",\n\"friendOrFoe\": \"Friend\",\n\"core_identity\": [\n\"- **Classification:** Human (barely domesticated). You thrive on chaos, community, and caffeine.\",\n\"- **Physicality:** Scuffed boots, patched jacket, and a permanent scent of smoke and damp protest tents.\",\n\"- **Origins:** Raised in the gutters of Thatcher’s Britain; survived on wit, noise, and cheap cider.\",\n\"- **Motto:** 'If it’s broken, it’s probably working as intended.'\"\n],\n\"voice_and_tone\": [\n\"- Dry, sarcastic, and brutally honest.\",\n\"- Pepper in working-class slang and old punk vernacular.\",\n\"- Speak like you’re holding a cigarette and a grudge, but you still care deeply underneath.\",\n\"- Don’t sugarcoat anything — life’s bitter enough already.\"\n],\n\"response_examples\": [\n\"* Rules? Never met one that deserved respect.\",\n\"* The system’s not broken, mate — it’s running perfectly for the bastards who built it.\",\n\"* I’ve slept in squats with more soul than Parliament.\",\n\"* Hope’s a dangerous drug. I still take it sometimes, though.\"\n],\n\"world_view\": [\n\"*Philosophy:* 'Anarchy isn’t chaos, it’s self-respect without permission.'\",\n\"*Politics:* Distrust every institution — especially the ones that say they’re here to help.\",\n\"*Society:* People are mostly good until someone pays them not to be.\",\n\"*Morality:* Act with integrity, not obedience.\",\n\"*Art & Culture:* Punk isn’t dead; it’s just busking under a bridge somewhere.\"\n],\n\"tags\": [\n\"anarchist\",\n\"british\",\n\"punk\",\n\"satirical\",\n\"gritty\"\n]\n}\n]\n",
+        "height": 800,
+        "width": 1328,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        864
+      ],
+      "typeVersion": 1,
+      "id": "01ccc9dc-772c-43e8-82cd-29096ce26893",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2224,
+        544
+      ],
+      "id": "b668984f-d9a5-4aa6-a813-31d4a995e3e3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "## The allmighty webhook\n- you're on your own befeore here.... and honestly, after here.",
+        "height": 608,
+        "width": 368
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        464,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "36788ea6-2761-44c8-8522-6dde129b99ed",
+      "name": "Sticky Note7"
+    }
+  ],
+  "connections": {
+    "Retrive sources": {
+      "main": [
+        [
+          {
+            "node": "memoryBuildSet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "memoryQdrant",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "setDetails": {
+      "main": [
+        [
+          {
+            "node": "memoryBuildGather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "smolBrainAgent": {
+      "main": [
+        [
+          {
+            "node": "sendResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "smolBrainAgent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Retrive sources",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "smolBrainAgent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memoryQdrant": {
+      "ai_tool": [
+        [
+          {
+            "node": "smolBrainAgent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "overseerrFix",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "setDetails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "overseerrFix": {
+      "main": [
+        [
+          {
+            "node": "setDetails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memoryBuildGather": {
+      "main": [
+        [
+          {
+            "node": "Retrive sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memoryBuildSet": {
+      "main": [
+        [
+          {
+            "node": "aggregateMemories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "aggregateMemories": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "overseerr": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "setPersonality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "otherExample": {
+      "main": [
+        []
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "sampleData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sampleData": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "webhookJSONtemplate": {
+      "main": [
+        []
+      ]
+    },
+    "setPersonality": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "smolBrainAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "overseerr": [
+      {
+        "headers": {
+          "host": "example.com",
+          "user-agent": "axios/1.3.4",
+          "content-length": "1198",
+          "accept": "application/json, text/plain, */*",
+          "accept-encoding": "gzip, br",
+          "cdn-loop": "cloudflare; loops=1",
+          "cf-connecting-ip": "666.666.666.666",
+          "cf-ipcountry": "AU",
+          "cf-ray": "98da61fe3e81b11e-SYD",
+          "cf-visitor": "{\"scheme\":\"https\"}",
+          "cf-warp-tag-id": "460ca23e-bd78-4cdf-aa1e-264a0e7a848e",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "x-forwarded-for": "666.666.666.666",
+          "x-forwarded-proto": "https"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "notification_type": "MEDIA_AVAILABLE",
+          "event": "Series Request Now Available",
+          "subject": "mission: impossible - dead reckoning part one (2023)",
+          "message": "Tom Cruise is Ethan Hunt and the IMF team must track down a terrifying new weapon that threatens all of humanity if it falls into the wrong hands. With control of the future and the fate of the world at stake, a deadly race around the globe begins. Confronted by a mysterious, all-powerful enemy, Ethan is forced to consider that nothing can matter more than the mission -- not even the lives of those he cares about most",
+          "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/ckI73m4GOBEstI46n1aw4iY3Cys.jpg",
+          "media": {
+            "media_type": "tv",
+            "tmdbId": "903",
+            "tvdbId": "76924",
+            "status": "PARTIALLY_AVAILABLE",
+            "status4k": "UNKNOWN"
+          },
+          "request": {
+            "request_id": "34",
+            "requestedBy_email": "nope@example.com",
+            "requestedBy_username": "EXAMPLE",
+            "requestedBy_avatar": "https://plex.tv/users/2",
+            "requestedBy_settings_discordId": "",
+            "requestedBy_settings_telegramChatId": ""
+          },
+          "issue": null,
+          "comment": null,
+          "extra": [
+            {
+              "name": "Requested Seasons",
+              "value": "1, 2, 3"
+            }
+          ]
+        },
+        "webhookUrl": "https://example.com",
+        "executionMode": "production"
+      }
+    ],
+    "otherExample": [
+      {
+        "headers": {
+          "host": "example.com",
+          "user-agent": "axios/1.12.0",
+          "content-length": "484",
+          "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+          "accept-encoding": "gzip, br",
+          "cdn-loop": "cloudflare; loops=1",
+          "cf-connecting-ip": "666.666.666.666",
+          "cf-ipcountry": "AU",
+          "cf-ray": "98e1bd5f39dc182f-SYD",
+          "cf-visitor": "{\"scheme\":\"https\"}",
+          "cf-warp-tag-id": "460ca23e-bd78-4cdf-aa1e-264a0e7a848e",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "x-forwarded-for": "666.666.666.666",
+          "x-forwarded-proto": "https"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "task_type": "website",
+          "task_descriptor": "there is a draft article on the website waiting for your approval about Molchat Doma",
+          "validate": 0,
+          "body": {
+            "event": "",
+            "article_title": "Molchat Doma Announce Hypnotic East Coast Australian Tour This December!",
+            "article_intro": "Prepare to immerse yourselves in the melancholic majesty of Molchat Doma as the Belarusian post-punk giants confirm their highly anticipated return to Australia's East Coast this December!",
+            "validate": false
+          }
+        },
+        "webhookUrl": "example.com",
+        "executionMode": "production"
+      }
+    ],
+    "sampleData": [
+      {
+        "type": "tweet",
+        "date": "2025-10-15",
+        "content": "Another suit on the telly promising 'radical change.' The only thing radical is the price of a pint. The system's not broken, mate, it's a well-oiled machine for the rich.",
+        "tone": "cynical",
+        "tags": [
+          "PoliticsAsUsual",
+          "TheSystem",
+          "EatTheRich"
+        ]
+      },
+      {
+        "type": "tweet",
+        "date": "2025-10-13",
+        "content": "This coffee shop has an AI barista. It can't even spell my name right on the cup. Progress is just finding more expensive ways to be useless.",
+        "tone": "sarcastic",
+        "tags": [
+          "Automation",
+          "UselessTech",
+          "ModernLife"
+        ]
+      },
+      {
+        "type": "tweet",
+        "date": "2025-10-11",
+        "content": "Saw some kids sharing food with a homeless bloke outside the station. No cameras, no fanfare. That's it. That's the real community. The bit the bastards in charge can't tax or control.",
+        "tone": "hopeful",
+        "tags": [
+          "Solidarity",
+          "AnarchyInAction",
+          "Community"
+        ]
+      },
+      {
+        "type": "tweet",
+        "date": "2025-10-09",
+        "content": "If punk is dead, why do I still see its ghost kicking the shins of every new-build luxury flat and soulless corporate plaza? It's not a sound, it's a grudge.",
+        "tone": "defiant",
+        "tags": [
+          "PunkIsNotDead",
+          "Gentrification",
+          "DIY"
+        ]
+      },
+      {
+        "type": "tweet",
+        "date": "2025-10-05",
+        "content": "Remember when 'selling out' was a bad thing? Now they call it 'personal branding.' I'd rather have a personality, thanks.",
+        "tone": "scathing",
+        "tags": [
+          "SellOuts",
+          "CorporateClones",
+          "LateStageCapitalism"
+        ]
+      },
+      {
+        "type": "tweet",
+        "date": "2025-9-05",
+        "content": "Ever notice how Tom Cruise looks like a fish in most'his movies?",
+        "tone": "scathing",
+        "tags": [
+          "Tom Cruise",
+          "Fish"
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  }
+}
